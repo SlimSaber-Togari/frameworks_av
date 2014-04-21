@@ -429,15 +429,18 @@ status_t AudioFlinger::EffectModule::configure()
         p->psize = sizeof(uint32_t);
         p->vsize = sizeof(uint32_t);
         size = sizeof(int);
-        *(int32_t *)p->data = VISUALIZER_PARAM_LATENCY;
-
+        //*(int32_t *)p->data = VISUALIZER_PARAM_LATENCY;
+		int32_t const vpl =VISUALIZER_PARAM_LATENCY;
+		
         uint32_t latency = 0;
         PlaybackThread *pbt = thread->mAudioFlinger->checkPlaybackThread_l(thread->mId);
         if (pbt != NULL) {
             latency = pbt->latency_l();
         }
 
-        *((int32_t *)p->data + 1)= latency;
+        //*((int32_t *)p->data + 1)= latency;
+		memcpy(&(p->data[0]), &vpl, sizeof(vpl));
+		memcpy(&(p->data[sizeof(int32_t)]), &latency, sizeof(latency));
         (*mEffectInterface)->command(mEffectInterface,
                                      EFFECT_CMD_SET_PARAM,
                                      sizeof(effect_param_t) + 8,
