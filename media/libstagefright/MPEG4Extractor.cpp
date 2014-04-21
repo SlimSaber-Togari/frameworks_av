@@ -622,7 +622,8 @@ static int32_t readSize(off64_t offset,
     return size;
 }
 
-status_t MPEG4Extractor::parseDrmSINF(off64_t *offset, off64_t data_offset) {
+status_t MPEG4Extractor::parseDrmSINF(
+        off64_t * /* offset */, off64_t data_offset) {
     uint8_t updateIdTag;
     if (mDataSource->readAt(data_offset, &updateIdTag, 1) < 1) {
         return ERROR_IO;
@@ -1050,12 +1051,25 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             // tenc box contains 1 byte version, 3 byte flags, 3 byte default algorithm id, one byte
             // default IV size, 16 bytes default KeyID
             // (ISO 23001-7)
-            char buf[4];
+            
+			//char buf[4];
+			union {
+				char buf[4];
+				long bufl[4/sizeof(long)];
+			};
+			
             memset(buf, 0, 4);
             if (mDataSource->readAt(data_offset + 4, buf + 1, 3) < 3) {
                 return ERROR_IO;
             }
-            uint32_t defaultAlgorithmId = ntohl(*((int32_t*)buf));
+			
+
+
+            const uint32_t defaultAlgorithmId = ntohl(bufl[0]);
+			
+			
+			
+			
             if (defaultAlgorithmId > 1) {
                 // only 0 (clear) and 1 (AES-128) are valid
                 return ERROR_MALFORMED;
@@ -1065,7 +1079,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             if (mDataSource->readAt(data_offset + 7, buf + 3, 1) < 1) {
                 return ERROR_IO;
             }
-            uint32_t defaultIVSize = ntohl(*((int32_t*)buf));
+            uint32_t defaultIVSize = ntohl(bufl[0]);
 
             if ((defaultAlgorithmId == 0 && defaultIVSize != 0) ||
                     (defaultAlgorithmId != 0 && defaultIVSize == 0)) {
@@ -2716,7 +2730,8 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
     return OK;
 }
 
-status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(off64_t offset, off64_t size) {
+status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(
+        off64_t offset, off64_t /* size */) {
     ALOGV("parseSampleAuxiliaryInformationSizes");
     // 14496-12 8.7.12
     uint8_t version;
@@ -2778,7 +2793,8 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(off64_t offset, off64
     return OK;
 }
 
-status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off64_t size) {
+status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(
+        off64_t offset, off64_t /* size */) {
     ALOGV("parseSampleAuxiliaryInformationOffsets");
     // 14496-12 8.7.13
     uint8_t version;
